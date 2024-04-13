@@ -211,7 +211,7 @@ runs:
                 arg_envvar="${arg//-/_}"
                 arg_envvar="INPUT_${arg_envvar^^}"
                 if [[ -n "${!arg_envvar:-}" ]]; then
-                    apptainer_args+=("--${arg}=\"${!arg_envvar}\"")
+                    apptainer_args+=(--${arg}=\"${!arg_envvar}\")
                 fi
             done
 
