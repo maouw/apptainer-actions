@@ -78,6 +78,7 @@ runs:
   steps:
     - id: export-github-inputs
       name: Set environment variables
+      shell: bash
       env:
         INPUT_BIND: ${{ inputs.bind }}
         INPUT_BUILD_ARGS: ${{ inputs.build-args }}
@@ -106,59 +107,24 @@ runs:
         XTRACE: ${{ inputs.xtrace }}
         GH_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ github.token }}
-      shell: bash
-      run: |
-        echo XTRACE="${XTRACE:-}" >>"${GITHUB_ENV}"
-        echo INPUT_BIND="${INPUT_BIND:-}" >>"${GITHUB_ENV}"
-        echo INPUT_BUILD_ARGS="${INPUT_BUILD_ARGS:-}" >>"${GITHUB_ENV}"
-        echo INPUT_BUILD_ARG_FILE="${INPUT_BUILD_ARG_FILE:-}" >>"${GITHUB_ENV}"
-        echo INPUT_DISABLE_CACHE="${INPUT_DISABLE_CACHE:-}" >>"${GITHUB_ENV}"
-        echo INPUT_FAKEROOT="${INPUT_FAKEROOT:-}" >>"${GITHUB_ENV}"
-        echo INPUT_FIX_PERMS="${INPUT_FIX_PERMS:-}" >>"${GITHUB_ENV}"
-        echo INPUT_FORCE="${INPUT_FORCE:-}" >>"${GITHUB_ENV}"
-        echo INPUT_JSON="${INPUT_JSON:-}" >>"${GITHUB_ENV}"
-        echo INPUT_MOUNT="${INPUT_MOUNT:-}" >>"${GITHUB_ENV}"
-        echo INPUT_NOTEST="${INPUT_NOTEST:-}" >>"${GITHUB_ENV}"
-        echo INPUT_SECTION="${INPUT_SECTION:-}" >>"${GITHUB_ENV}"
-        echo INPUT_UPDATE="${INPUT_UPDATE:-}" >>"${GITHUB_ENV}"
-        echo INPUT_USERNS="${INPUT_USERNS:-}" >>"${GITHUB_ENV}"
-        echo INPUT_WRITABLE_TMPFS="${INPUT_WRITABLE_TMPFS:-}" >>"${GITHUB_ENV}"
-        echo INPUT_TAGS="${INPUT_TAGS:-}" >>"${GITHUB_ENV}"
-        echo INPUT_ADD_TAGS="${INPUT_ADD_TAGS:-}" >>"${GITHUB_ENV}"
-        echo INPUT_DEFFILE="${INPUT_DEFFILE:-}" >>"${GITHUB_ENV}"
-        echo INPUT_DEFFILES_ROOTDIR="${INPUT_DEFFILES_ROOTDIR:-}" >>"${GITHUB_ENV}"
-        echo INPUT_NAME="${INPUT_NAME:-}" >>"${GITHUB_ENV}"
-        echo INPUT_IMAGE_URL="${INPUT_IMAGE_URL:-}" >>"${GITHUB_ENV}"
-        echo INPUT_IMAGE_VERSION="${INPUT_IMAGE_VERSION:-}" >>"${GITHUB_ENV}"
-        echo BUILD_LABELS_PATH="${BUILD_LABELS_PATH:-${RUNNER_TEMP:-/tmp}/.build.labels}" >>"${GITHUB_ENV}"
-        echo INPUT_IMAGE_DIR="${INPUT_IMAGE_DIR:-}" >>"${GITHUB_ENV}"
-        echo INPUT_IMAGE_PATH="${INPUT_IMAGE_PATH:-}" >>"${GITHUB_ENV}"
-        echo INPUT_APPTAINER_TMPDIR="${INPUT_APPTAINER_TMPDIR:-}" >>"${GITHUB_ENV}"
-
-        GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-"$(gh auth token || true)"}}"
-
-        if [[ -n "${GITHUB_TOKEN:-}" ]]; then    
-            echo GITHUB_TOKEN="${GITHUB_TOKEN}" >>"${GITHUB_ENV}"
-            echo GH_TOKEN="${GITHUB_TOKEN}" >>"${GITHUB_ENV}"
-        fi
-
+      run: source ${{ github.action_path }}/export-github-inputs.sh
     - id: check-prereqs
       name: Check prerequisites
       shell: bash
-      run: ${{ github.action_path }}/check-prereqs.sh
+      run: source ${{ github.action_path }}/check-prereqs.sh
     - id: find-deffile
       name: Find definition file
       shell: bash
-      run: ${{ github.action_path }}/find-deffile.sh
+      run: source ${{ github.action_path }}/find-deffile.sh
     - id: create-labels
       name: Create image labels
       shell: bash
-      run: ${{ github.action_path }}/create-labels.sh
+      run: source ${{ github.action_path }}/create-labels.sh
     - id: build-container
       name: Build container
       shell: bash
-      run: ${{ github.action_path }}/build-container.sh
+      run: source ${{ github.action_path }}/build-container.sh
     - id: push-container
       name: Push container
       shell: bash
-      run: ${{ github.action_path }}/push-container.sh
+      run: source ${{ github.action_path }}/push-container.sh
