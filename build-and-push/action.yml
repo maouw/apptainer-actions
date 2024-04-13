@@ -75,7 +75,6 @@ runs:
   steps:
     - id: build-and-push
       name: Build and push
-      shell: bash
       env:
         INPUT_BIND: ${{ inputs.bind }}
         INPUT_BUILD_ARGS: ${{ inputs.build-args }}
@@ -104,19 +103,10 @@ runs:
         XTRACE: ${{ inputs.xtrace }}
         GH_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ github.token }}
+      shell: bash
       run: |
-        set "-e${XTRACE:-}" -o pipefail
-        export BUILD_LABELS_PATH="${BUILD_LABELS_PATH:-${RUNNER_TEMP:-/tmp}/.build.labels}"
-
-        GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-"$(gh auth token || true)"}}"
-
-        if [[ -n "${GITHUB_TOKEN:-}" ]]; then
-            GH_TOKEN="${GITHUB_TOKEN}"
-        fi
-        export GITHUB_TOKEN GH_TOKEN
-
-        printenv | sed 's/^/main.sh: /' >&2
-
+        #!/usr/bin/env bash
+        
         function require_programs() {
 
             while [[ -n "${1:-}" ]]; do
@@ -345,7 +335,19 @@ runs:
             echo "::notice::Pushed image to \"${IMAGE_URL}\""
 
         }
+        [[ -n "${XTRACE:-false}" == 'true' ]] && set -x
 
+        export BUILD_LABELS_PATH="${BUILD_LABELS_PATH:-${RUNNER_TEMP:-/tmp}/.build.labels}"
+
+        GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-"$(gh auth token || true)"}}"
+
+        if [[ -n "${GITHUB_TOKEN:-}" ]]; then
+            GH_TOKEN="${GITHUB_TOKEN}"
+        fi
+        export GITHUB_TOKEN GH_TOKEN
+
+        printenv | sed 's/^/main.sh: /' >&2
+        
         echo "::group::check_prereqs()"
         check_prereqs
         echo "::endgroup::"
