@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -eu${XTRACE:-} -o pipefail
+
+printenv | sed 's/^/check.prereqs.sh: /' | sort
 command -v jq >/dev/null 2>&1 || { echo "jq is required but not found" >&2; exit 1; }
 command -v gh >/dev/null 2>&1 || { echo "gh is required but not found" >&2; exit 1; }
 command -v apptainer >/dev/null 2>&1 || { echo "apptainer is required but not found" >&2; exit 1; }
