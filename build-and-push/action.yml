@@ -76,42 +76,7 @@ runs:
   using: "composite"
 
   steps:
-    - name: Dump GitHub context
-      id: dump1
-      shell: bash
-      env:
-        GITHUB_CONTEXT: ${{ toJson(github) }}
-      run: echo "$GITHUB_CONTEXT"
-    - name: Dump job context
-      id: dump2
-      shell: bash
-      env:
-        JOB_CONTEXT: ${{ toJson(job) }}
-      run: echo "$JOB_CONTEXT"
-    - name: Dump steps context
-      id: dump3
-      shell: bash
-      env:
-        STEPS_CONTEXT: ${{ toJson(steps) }}
-      run: echo "$STEPS_CONTEXT"
-    - name: Dump runner context
-      id: dump4
-      shell: bash
-      env:
-        RUNNER_CONTEXT: ${{ toJson(runner) }}
-      run: echo "$RUNNER_CONTEXT"
-    - name: Dump strategy context
-      id: dump5
-      shell: bash
-      env:
-        STRATEGY_CONTEXT: ${{ toJson(strategy) }}
-      run: echo "$STRATEGY_CONTEXT"
-    - name: Dump matrix context
-      id: dump6
-      shell: bash
-      env:
-        MATRIX_CONTEXT: ${{ toJson(matrix) }}
-      run: echo "$MATRIX_CONTEXT"
+    
     - id: export-github-inputs
       name: Set environment variables
       shell: bash
@@ -142,25 +107,24 @@ runs:
         INPUT_APPTAINER_TMPDIR: ${{ inputs.apptainer-tmpdir }}
         XTRACE: ${{ inputs.xtrace }}
         GH_TOKEN: ${{ github.token }}
-      #run: ${{ github.action_path }}/${{ github.action }}.sh
-      run: printenv
+      run: ${{ github.action_path }}/export-github-inputs.sh
     - id: check-prereqs
       name: Check prerequisites
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/check-prereqs.sh
     - id: find-deffile
       name: Find definition file
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/find-deffile.sh
     - id: create-labels
       name: Create image labels
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/create-labels.sh
     - id: build-container
       name: Build container
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/build-container.sh
     - id: push-container
       name: Push container
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/push-container.sh
