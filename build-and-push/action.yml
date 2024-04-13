@@ -119,7 +119,7 @@ runs:
         }
 
         function check_prereqs() {
-            require_program jq gh apptainer oras || return 1
+            require_programs jq gh apptainer oras || return 1
         }
 
         function find_deffile() {
