@@ -73,8 +73,8 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - id: export-github-inputs
-      name: Set environment variables
+    - id: build-and-push
+      name: Build and push
       shell: bash
       env:
         INPUT_BIND: ${{ inputs.bind }}
@@ -105,9 +105,7 @@ runs:
         GH_TOKEN: ${{ github.token }}
         GITHUB_TOKEN: ${{ github.token }}
       run: |
-        set "-eEu${XTRACE:-}" -o pipefail
-        shopt -qs lastpipe
-
+        set "-e${XTRACE:-}" -o pipefail
         export BUILD_LABELS_PATH="${BUILD_LABELS_PATH:-${RUNNER_TEMP:-/tmp}/.build.labels}"
 
         GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-"$(gh auth token || true)"}}"
