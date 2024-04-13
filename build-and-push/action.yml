@@ -335,7 +335,7 @@ runs:
             echo "::notice::Pushed image to \"${IMAGE_URL}\""
 
         }
-        [[ -n "${XTRACE:-false}" == 'true' ]] && set -x
+        [[ "${XTRACE:-false}" == 'true' ]] && set -x
 
         export BUILD_LABELS_PATH="${BUILD_LABELS_PATH:-${RUNNER_TEMP:-/tmp}/.build.labels}"
 
@@ -347,7 +347,7 @@ runs:
         export GITHUB_TOKEN GH_TOKEN
 
         printenv | sed 's/^/main.sh: /' >&2
-        
+
         echo "::group::check_prereqs()"
         check_prereqs
         echo "::endgroup::"
