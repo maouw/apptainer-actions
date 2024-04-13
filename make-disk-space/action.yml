@@ -48,8 +48,8 @@ runs:
     - name: Clear up space
       uses: easimon/maximize-build-space@master
       with:
-          remove-dotnet: "${{ inputs.rm-dotnet }}"
-          remove-android: "${{ inputs.rm-android }}"
-          remove-haskell: 'true'
-          remove-codeql: 'true'
-          remove-docker-images: 'true'
+        remove-dotnet: ${{ inputs.rm-dotnet }}
+        remove-android: ${{ inputs.rm-android }}
+        remove-haskell: 'true'
+        remove-codeql: 'true'
+        remove-docker-images: 'true'
