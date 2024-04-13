@@ -168,7 +168,6 @@ runs:
             IMAGE_AUTHORS="${IMAGE_AUTHORS:-"$(gh api "/users/${GITHUB_ACTOR}" --jq 'if .name == "" then .login else .name end' || echo "${GITHUB_ACTOR:-}")"}"
             IMAGE_SOURCE="${IMAGE_SOURCE:-https://github.com/${GITHUB_REPOSITORY}}"
             IMAGE_REVISION="${IMAGE_REVISION:-${GITHUB_SHA}}"
-            IMAGE_URL="${IMAGE_URL:-${INPUT_IMAGE_URL:-oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:${IMAGE_VERSION}}}"
             IMAGE_VENDOR="${IMAGE_VENDOR:-${GITHUB_REPOSITORY_OWNER}}"
             IMAGE_LICENSES="${IMAGE_LICENSES:-"$(gh api "/repos/${GITHUB_REPOSITORY}" --jq '.license.spdx_id?' || true)"}"
             IMAGE_TITLE="${IMAGE_TITLE:-"${IMAGE_NAME:-"${GITHUB_REPOSITORY##*/}"}"}"
@@ -184,6 +183,51 @@ runs:
                 grep -qiE '^\s*Bootstrap:\s*docker' "${DEFFILE}" && IMAGE_FROM="docker.io/${IMAGE_FROM}"
             fi
             IMAGE_BASE_NAME="${IMAGE_BASE_NAME:-${IMAGE_FROM:-}}"
+
+            # Get the image tags:
+            [[ -n "${INPUT_TAGS:-}" ]] && mapfile -t image_tags <<<"${INPUT_TAGS:-}" # Add the tags from the input
+
+            [[ -n "${IMAGE_VERSION:-}" ]] && image_tags+=("${IMAGE_VERSION:-}") # Add the version as a tag
+
+            [[ -n "${INPUT_ADD_TAGS:-}" ]] && image_tags+=("${INPUT_ADD_TAGS:-}") # Add the additional tags to the list of tags
+
+            # If we have a semantic version, and if it is the newest version that is not a pre-release, add the "latest" tag:
+            if [[ "${IMAGE_VERSION}" =~ ^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+                echo "::notice::Trying to set IMAGE_VERSION to semantically newest tag if possible"
+                SEMANTICALLY_NEWEST_TAG="$({ echo "${IMAGE_VERSION}";
+                IMAGE_REPO_URL="${IMAGE_URL#oras://ghcr.io/}"
+                IMAGE_REPO_URL="${IMAGE_REPO_URL%:*}"
+                IMAGE_REPO_URL="$(jq -rn --arg x "${IMAGE_REPO_URL}" '$x|@uri' || true)"
+                gh api "/users/${GITHUB_REPOSITORY_OWNER}/packages/container/${GITHUB_REPOSITORY#*/}%2F${IMAGE_NAME}/versions" --jq '.[].metadata.container.tags[]' ||
+                    true; } |
+                    grep -P '^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$' |
+                    grep -v '\-.*$' | sed -E 's/^v?(.*)$/\1\t\0/g' |
+                    tr - \~ |
+                    sort -k1V |
+                    tr \~ - |
+                    cut -f2 |
+                    tail -n1 ||
+                    true)"
+
+                if [[ -n "${SEMANTICALLY_NEWEST_TAG:-}" ]]; then
+                    echo "::notice::The semantically newest tag is ${SEMANTICALLY_NEWEST_TAG:-}"
+                else
+                    echo "::notice::No semantically newest tag found ${SEMANTICALLY_NEWEST_TAG:-}"
+                fi
+
+                if [[ "${SEMANTICALLY_NEWEST_TAG:-}" == "${IMAGE_VERSION}" ]]; then
+                    image_tags+=("latest")
+                fi
+                IMAGE_URL_TAG="${IMAGE_VERSION#v}"
+            fi
+
+            # Remove duplicate tags:
+            if (("${#image_tags[@]}" > 1)); then
+                mapfile -t image_tags < <(echo "${image_tags[@]}" | tr '[:space:]' '\n' | awk '!a[$0]++' || true)
+            fi
+
+            printf "::notice::Image tags: %s\n" "${image_tags[@]}"
+            export IMAGE_URL="${IMAGE_URL:-${INPUT_IMAGE_URL:-oras://ghcr.io/${GITHUB_REPOSITORY}/${IMAGE_NAME}:${IMAGE_URL_TAG:-${IMAGE_VERSION}}}}"
 
             # Write each image label to the file if the label is set:
             if [[ -n "${BUILD_LABELS_PATH:-}" ]]; then
@@ -205,8 +249,6 @@ runs:
         }
 
         function build_container() {
-            declare -a apptainer_args=()
-
             for arg in bind build-args build-arg-file disable-cache fakeroot fix-perms force json mount notest section update userns writable-tmpfs; do
                 arg_envvar="${arg//-/_}"
                 arg_envvar="INPUT_${arg_envvar^^}"
@@ -250,51 +292,6 @@ runs:
         }
 
         function push_container() {
-            declare -a image_tags
-            # Get the image tags:
-            [[ -n "${INPUT_TAGS:-}" ]] && mapfile -t image_tags <<<"${INPUT_TAGS:-}" # Add the tags from the input
-
-            [[ -n "${IMAGE_VERSION:-}" ]] && image_tags+=("${IMAGE_VERSION:-}") # Add the version as a tag
-
-            [[ -n "${INPUT_ADD_TAGS:-}" ]] && image_tags+=("${INPUT_ADD_TAGS:-}") # Add the additional tags to the list of tags
-
-            # If we have a semantic version, and if it is the newest version that is not a pre-release, add the "latest" tag:
-            if [[ "${IMAGE_VERSION}" =~ ^v?(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
-                echo "::notice::Trying to set IMAGE_VERSION to semantically newest tag if possible"
-                SEMANTICALLY_NEWEST_TAG="$({ echo "${IMAGE_VERSION}";
-                IMAGE_REPO_URL="${IMAGE_URL#oras://ghcr.io/}"
-                IMAGE_REPO_URL="${IMAGE_REPO_URL%:*}"
-                IMAGE_REPO_URL="$(jq -rn --arg x "${IMAGE_REPO_URL}" '$x|@uri' || true)"
-                gh api "/users/${GITHUB_REPOSITORY_OWNER}/packages/container/${GITHUB_REPOSITORY#*/}%2F${IMAGE_NAME}/versions" --jq '.[].metadata.container.tags[]' ||
-                    true; } |
-                    grep -P '^v?(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$' |
-                    grep -v '\-.*$' | sed -E 's/^v?(.*)$/\1\t\0/g' |
-                    tr - \~ |
-                    sort -k1V |
-                    tr \~ - |
-                    cut -f2 |
-                    tail -n1 ||
-                    true)"
-
-                if [[ -n "${SEMANTICALLY_NEWEST_TAG:-}" ]]; then
-                    echo "::notice::The semantically newest tag is ${SEMANTICALLY_NEWEST_TAG:-}"
-                else
-                    echo "::notice::No semantically newest tag found ${SEMANTICALLY_NEWEST_TAG:-}"
-                fi
-
-                if [[ "${SEMANTICALLY_NEWEST_TAG:-}" == "${IMAGE_VERSION}" ]]; then
-                    image_tags+=("latest")
-                fi
-
-            fi
-
-            # Remove duplicate tags:
-            if (("${#image_tags[@]}" > 1)); then
-                mapfile -t image_tags < <(echo "${image_tags[@]}" | tr '[:space:]' '\n' | awk '!a[$0]++' || true)
-            fi
-
-            printf "::notice::Image tags: %s\n" "${image_tags[@]}"
-
             case "${IMAGE_URL:-}" in
                 oras://ghcr.io/*)
 
@@ -337,6 +334,9 @@ runs:
         }
         [[ "${XTRACE:-false}" == 'true' ]] && set -x
 
+        declare -xa image_tags=()
+        declare -xa apptainer_args=()
+        
         export BUILD_LABELS_PATH="${BUILD_LABELS_PATH:-${RUNNER_TEMP:-/tmp}/.build.labels}"
 
         GITHUB_TOKEN="${GITHUB_TOKEN:-${GH_TOKEN:-"$(gh auth token || true)"}}"
