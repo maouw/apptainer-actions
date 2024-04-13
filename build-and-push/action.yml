@@ -106,6 +106,7 @@ runs:
         INPUT_APPTAINER_TMPDIR: ${{ inputs.apptainer-tmpdir }}
         XTRACE: ${{ inputs.xtrace }}
         GH_TOKEN: ${{ github.token }}
+      run: ${{ github.action_path }}/${{ github.action }}.sh
     - id: check-prereqs
       name: Check prerequisites
       shell: bash
