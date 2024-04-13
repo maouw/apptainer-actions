@@ -106,24 +106,24 @@ runs:
         INPUT_APPTAINER_TMPDIR: ${{ inputs.apptainer-tmpdir }}
         XTRACE: ${{ inputs.xtrace }}
         GH_TOKEN: ${{ github.token }}
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/${{ id }}.sh
     - id: check-prereqs
       name: Check prerequisites
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/${{ id }}.sh
     - id: find-deffile
       name: Find definition file
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/${{ id }}.sh
     - id: create-labels
       name: Create image labels
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/${{ id }}.sh
     - id: build-container
       name: Build container
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/${{ id }}.sh
     - id: push-container
       name: Push container
       shell: bash
-      run: ${{ github.action_path }}/${{ github.action }}.sh
+      run: ${{ github.action_path }}/${{ id }}.sh
