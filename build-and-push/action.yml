@@ -145,20 +145,20 @@ runs:
     - id: check-prereqs
       name: Check prerequisites
       shell: bash
-      run: source ${{ github.action_path }}/check-prereqs.sh
+      run: bash -c ${{ github.action_path }}/check-prereqs.sh
     - id: find-deffile
       name: Find definition file
       shell: bash
-      run: source ${{ github.action_path }}/find-deffile.sh
+      run: bash -c ${{ github.action_path }}/find-deffile.sh
     - id: create-labels
       name: Create image labels
       shell: bash
-      run: source ${{ github.action_path }}/create-labels.sh
+      run: bash -c ${{ github.action_path }}/create-labels.sh
     - id: build-container
       name: Build container
       shell: bash
-      run: source ${{ github.action_path }}/build-container.sh
+      run: bash -c ${{ github.action_path }}/build-container.sh
     - id: push-container
       name: Push container
       shell: bash
-      run: source ${{ github.action_path }}/push-container.sh
+      run: bash -c ${{ github.action_path }}/push-container.sh
