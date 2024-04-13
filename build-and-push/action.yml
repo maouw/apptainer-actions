@@ -10,16 +10,8 @@ inputs:
     description: "Path to the file containing build-time variables"
   disable-cache:
     description: "Do not use cache when building the image"
-<<<<<<< HEAD
-    default: "true"
-  fakeroot:
-||||||| 5d3bbbe
-    default: 'true'
-   fakeroot:
-=======
     default: 'true'
   fakeroot:
->>>>>>> fix-inputs
     description: "Build with the appearance of running as root (default when building from a definition file unprivileged)"
   fix-perms:
     description: "Ensure owner has rwX permissions on all container content for oci/docker sources"
@@ -40,12 +32,6 @@ inputs:
     description: "Build with the appearance of running as root (default when building from a definition file unprivileged)"
   writable-tmpfs:
     description: "During the %test section, makes the file system accessible as read-write with non  persistent data (with overlay support only)"
-<<<<<<< HEAD
-
-||||||| 5d3bbbe
- 
-=======
->>>>>>> fix-inputs
   # Metadata options
   tags:
     description: "List of tags (will replace the default tags)"
