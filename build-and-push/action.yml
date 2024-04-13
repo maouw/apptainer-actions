@@ -78,6 +78,7 @@ runs:
   steps:
     - id: export-github-inputs
       name: Set environment variables
+      shell: bash
       env:
         INPUT_BIND: ${{ inputs.bind }}
         INPUT_BUILD_ARGS: ${{ inputs.build-args }}
@@ -108,16 +109,21 @@ runs:
       run: ${{ github.action_path }}/${{ github.action }}.sh
     - id: check-prereqs
       name: Check prerequisites
+      shell: bash
       run: ${{ github.action_path }}/${{ github.action }}.sh
     - id: find-deffile
       name: Find definition file
+      shell: bash
       run: ${{ github.action_path }}/${{ github.action }}.sh
     - id: create-labels
       name: Create image labels
+      shell: bash
       run: ${{ github.action_path }}/${{ github.action }}.sh
     - id: build-container
       name: Build container
+      shell: bash
       run: ${{ github.action_path }}/${{ github.action }}.sh
     - id: push-container
       name: Push container
+      shell: bash
       run: ${{ github.action_path }}/${{ github.action }}.sh
