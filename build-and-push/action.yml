@@ -76,7 +76,6 @@ runs:
   using: "composite"
 
   steps:
-    
     - id: export-github-inputs
       name: Set environment variables
       shell: bash
@@ -107,6 +106,7 @@ runs:
         INPUT_APPTAINER_TMPDIR: ${{ inputs.apptainer-tmpdir }}
         XTRACE: ${{ inputs.xtrace }}
         GH_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ github.token }}
       run: ${{ github.action_path }}/export-github-inputs.sh
     - id: check-prereqs
       name: Check prerequisites
